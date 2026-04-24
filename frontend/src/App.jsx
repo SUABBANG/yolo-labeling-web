@@ -6,6 +6,42 @@ import LabelPanel from './components/LabelPanel';
 import Toolbar from './components/Toolbar';
 import './App.css';
 
+function useResizable(initialWidth, minWidth = 100, maxWidth = 600) {
+  const [width, setWidth] = useState(initialWidth);
+  const dragging = useRef(false);
+  const startX = useRef(0);
+  const startW = useRef(0);
+  const dirRef = useRef(1); // 1 = drag right increases, -1 = drag right decreases
+
+  const startResize = useCallback((e, direction = 1) => {
+    e.preventDefault();
+    dragging.current = true;
+    dirRef.current = direction;
+    startX.current = e.clientX;
+    startW.current = width;
+
+    const onMouseMove = (ev) => {
+      if (!dragging.current) return;
+      const delta = (ev.clientX - startX.current) * dirRef.current;
+      const newW = Math.min(Math.max(startW.current + delta, minWidth), maxWidth);
+      setWidth(newW);
+    };
+    const onMouseUp = () => {
+      dragging.current = false;
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+  }, [width, minWidth, maxWidth]);
+
+  return [width, startResize];
+}
+
 export default function App() {
   const [activeProject, setActiveProject] = useState(null);
   const [classes, setClasses] = useState([]);
@@ -19,6 +55,8 @@ export default function App() {
   const [zoom, setZoom] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [loadError, setLoadError] = useState('');
+  const [sidebarWidth, startSidebarResize] = useResizable(240, 150, 500);
+  const [panelWidth, startPanelResize] = useResizable(260, 150, 500);
 
   // Undo/Redo
   const [history, setHistory] = useState([]);
@@ -251,7 +289,7 @@ export default function App() {
       </header>
 
       <div className="app-body">
-        <aside className="sidebar">
+        <aside className="sidebar" style={{ width: sidebarWidth }}>
           <ImageList
             images={images}
             selectedImage={selectedImage}
@@ -259,6 +297,10 @@ export default function App() {
             onToggleCompleted={handleToggleCompleted}
           />
         </aside>
+        <div
+          className="resize-handle"
+          onMouseDown={(e) => startSidebarResize(e, 1)}
+        />
 
         <main className="main-area">
           <Toolbar
@@ -291,7 +333,11 @@ export default function App() {
           />
         </main>
 
-        <aside className="panel">
+        <div
+          className="resize-handle"
+          onMouseDown={(e) => startPanelResize(e, -1)}
+        />
+        <aside className="panel" style={{ width: panelWidth }}>
           <LabelPanel
             classes={classes}
             currentClass={currentClass}

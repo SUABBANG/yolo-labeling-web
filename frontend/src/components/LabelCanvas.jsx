@@ -89,6 +89,15 @@ export default function LabelCanvas({
     ctx.translate(offset.x, offset.y);
     ctx.scale(zoom, zoom);
 
+    // 이미지 영역 그림자
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+    ctx.shadowBlur = 20 / zoom;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, imgRef.current.naturalWidth, imgRef.current.naturalHeight);
+    ctx.shadowColor = 'transparent';
+
     // 이미지 그리기
     ctx.drawImage(imgRef.current, 0, 0);
 
@@ -382,17 +391,36 @@ export default function LabelCanvas({
     onOffsetChange({ x: newOffsetX, y: newOffsetY });
   };
 
-  // 이미지 로드 시 fit to canvas
-  useEffect(() => {
-    if (!imgSize.w || !imgSize.h || !containerRef.current) return;
-    const cw = containerRef.current.clientWidth;
-    const ch = containerRef.current.clientHeight;
+  // 이미지를 컨테이너 중앙에 맞추는 함수
+  const fitToCenter = useCallback(() => {
+    const container = containerRef.current;
+    if (!container || !imgSize.w || !imgSize.h) return;
+    const padding = 40;
+    const cw = container.clientWidth - padding * 2;
+    const ch = container.clientHeight - padding * 2;
+    if (cw <= 0 || ch <= 0) return;
     const scale = Math.min(cw / imgSize.w, ch / imgSize.h, 1);
-    const ox = (cw - imgSize.w * scale) / 2;
-    const oy = (ch - imgSize.h * scale) / 2;
+    const ox = (container.clientWidth - imgSize.w * scale) / 2;
+    const oy = (container.clientHeight - imgSize.h * scale) / 2;
     onZoomChange(scale);
     onOffsetChange({ x: ox, y: oy });
+  }, [imgSize, onZoomChange, onOffsetChange]);
+
+  // 이미지 로드 시 fit
+  useEffect(() => {
+    fitToCenter();
   }, [imgSize]);
+
+  // 컨테이너 리사이즈 시 fit
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    const observer = new ResizeObserver(() => {
+      fitToCenter();
+    });
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [fitToCenter]);
 
   return (
     <div className="canvas-container" ref={containerRef}>
