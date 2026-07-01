@@ -48,6 +48,15 @@ def save_completed(project_path, completed_list):
         json.dump(completed_list, f, ensure_ascii=False)
 
 
+def build_target_stems(filenames):
+    """선택된 이미지 파일명 목록을 라벨 파일 매칭용 stem 집합으로 변환.
+
+    filenames가 비어있거나 None이면 None을 반환(= 전체 대상)."""
+    if not filenames:
+        return None
+    return {Path(f).stem for f in filenames if f}
+
+
 def scan_dataset(project_path):
     """데이터셋 경로를 스캔하여 클래스 목록과 이미지 정보를 반환"""
     images_dir = os.path.join(project_path, "images")
@@ -206,6 +215,7 @@ def batch_replace_class():
     data = request.get_json()
     from_class = data.get("fromClass")
     to_class = data.get("toClass")
+    target_stems = build_target_stems(data.get("filenames"))
 
     if from_class is None or to_class is None:
         return jsonify({"error": "fromClass와 toClass를 지정하세요."}), 400
@@ -221,6 +231,8 @@ def batch_replace_class():
 
     for fname in os.listdir(labels_dir):
         if not fname.endswith(".txt"):
+            continue
+        if target_stems is not None and Path(fname).stem not in target_stems:
             continue
         fpath = os.path.join(labels_dir, fname)
         lines = []
@@ -244,6 +256,69 @@ def batch_replace_class():
         "success": True,
         "modifiedFiles": modified_files,
         "modifiedBoxes": modified_boxes,
+    })
+
+
+@app.route("/api/labels/batch-delete", methods=["POST"])
+def batch_delete_class():
+    """프로젝트 내 모든 라벨 파일에서 특정 클래스의 라벨(박스)을 일괄 제거"""
+    if not active_project_path:
+        return jsonify({"error": "프로젝트가 로드되지 않았습니다."}), 400
+
+    data = request.get_json()
+    target_class = data.get("classId")
+    target_stems = build_target_stems(data.get("filenames"))
+
+    if target_class is None:
+        return jsonify({"error": "classId를 지정하세요."}), 400
+
+    try:
+        target_class = int(target_class)
+    except (ValueError, TypeError):
+        return jsonify({"error": "classId는 정수여야 합니다."}), 400
+
+    labels_dir = os.path.join(active_project_path, "labels")
+    if not os.path.isdir(labels_dir):
+        return jsonify({"error": "labels 폴더가 존재하지 않습니다."}), 400
+
+    modified_files = 0
+    deleted_boxes = 0
+
+    for fname in os.listdir(labels_dir):
+        if not fname.endswith(".txt"):
+            continue
+        if target_stems is not None and Path(fname).stem not in target_stems:
+            continue
+        fpath = os.path.join(labels_dir, fname)
+        lines = []
+        changed = False
+        with open(fpath, "r", encoding="utf-8") as f:
+            for line in f:
+                parts = line.strip().split()
+                if not parts:
+                    continue
+                try:
+                    line_class = int(float(parts[0]))
+                except ValueError:
+                    # 클래스 ID를 해석할 수 없는 줄은 그대로 보존
+                    lines.append(" ".join(parts))
+                    continue
+                if len(parts) >= 5 and line_class == target_class:
+                    changed = True
+                    deleted_boxes += 1
+                    continue
+                lines.append(" ".join(parts))
+
+        if changed:
+            with open(fpath, "w", encoding="utf-8") as f:
+                for line in lines:
+                    f.write(line + "\n")
+            modified_files += 1
+
+    return jsonify({
+        "success": True,
+        "modifiedFiles": modified_files,
+        "deletedBoxes": deleted_boxes,
     })
 
 

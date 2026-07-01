@@ -371,6 +371,8 @@ export default function App() {
             classes={classes}
             currentClass={currentClass}
             onClassChange={setCurrentClass}
+            images={images}
+            selectedImage={selectedImage}
             boxes={boxes}
             selectedBoxIndex={selectedBoxIndex}
             onSelectBox={setSelectedBoxIndex}

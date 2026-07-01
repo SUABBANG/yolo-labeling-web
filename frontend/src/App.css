@@ -704,6 +704,105 @@ body {
   flex-shrink: 0;
 }
 
+.scope-selector {
+  margin-bottom: 8px;
+}
+
+.scope-radios {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.scope-radios label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: #cfd8ff;
+  cursor: pointer;
+}
+
+.scope-radios input {
+  cursor: pointer;
+}
+
+.scope-picker {
+  border: 1px solid #2a2a4a;
+  border-radius: 4px;
+  background: #0f2350;
+  padding: 6px;
+}
+
+.scope-picker-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+
+.scope-picker-actions button {
+  padding: 3px 6px;
+  border: 1px solid #2a4a7a;
+  border-radius: 4px;
+  background: #0f3460;
+  color: #e0e0e0;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.scope-picker-actions button:hover {
+  background: #155080;
+}
+
+.scope-picker-count {
+  font-size: 10px;
+  color: #7a90c0;
+  margin-bottom: 4px;
+}
+
+.scope-picker-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 160px;
+  overflow-y: auto;
+}
+
+.scope-picker-list li {
+  margin: 0;
+}
+
+.scope-picker-list label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 4px;
+  font-size: 11px;
+  color: #d0d8f0;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.scope-picker-list label:hover {
+  background: #16305c;
+}
+
+.scope-picker-list label.checked {
+  background: #1c3a6e;
+}
+
+.scope-picker-list input {
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.scope-picker-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .batch-apply-btn {
   width: 100%;
   padding: 6px 0;
@@ -723,6 +822,14 @@ body {
 .batch-apply-btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+}
+
+.batch-apply-btn.batch-delete-btn {
+  background: #d63030;
+}
+
+.batch-apply-btn.batch-delete-btn:hover {
+  background: #b52020;
 }
 
 .batch-error {
