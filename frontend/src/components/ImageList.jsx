@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-export default function ImageList({ images, selectedImage, onSelectImage, onToggleCompleted }) {
+export default function ImageList({ images, selectedImage, onSelectImage, onToggleCompleted, onDeleteImage }) {
   const [filter, setFilter] = useState('');
   const [filterMode, setFilterMode] = useState('all'); // all, incomplete, completed
 
@@ -71,6 +71,16 @@ export default function ImageList({ images, selectedImage, onSelectImage, onTogg
             <span className="image-name" title={img.filename}>
               {img.filename}
             </span>
+            <button
+              className="delete-image-btn"
+              title="이미지 및 라벨 삭제"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDeleteImage(img.filename);
+              }}
+            >
+              🗑
+            </button>
           </li>
         ))}
       </ul>

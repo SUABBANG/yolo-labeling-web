@@ -433,9 +433,32 @@ body {
 }
 
 .image-name {
+  flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.delete-image-btn {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  font-size: 13px;
+  padding: 2px 4px;
+  border-radius: 4px;
+  opacity: 0;
+  transition: opacity 0.15s, background 0.15s, color 0.15s;
+}
+
+.image-item:hover .delete-image-btn {
+  opacity: 1;
+}
+
+.delete-image-btn:hover {
+  background: #5e1a1a;
+  color: #ff5c5c;
 }
 
 /* Main Area */

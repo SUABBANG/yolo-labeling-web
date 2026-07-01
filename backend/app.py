@@ -247,6 +247,35 @@ def batch_replace_class():
     })
 
 
+@app.route("/api/images/<filename>", methods=["DELETE"])
+def delete_image(filename):
+    """이미지 파일과 해당 라벨 파일을 삭제하고 완료 목록에서 제거"""
+    if not active_project_path:
+        return jsonify({"error": "프로젝트가 로드되지 않았습니다."}), 400
+
+    # 경로 조작 방지
+    if filename != os.path.basename(filename):
+        return jsonify({"error": "잘못된 파일 이름입니다."}), 400
+
+    image_path = os.path.join(active_project_path, "images", filename)
+    if not os.path.isfile(image_path):
+        return jsonify({"error": "이미지를 찾을 수 없습니다."}), 404
+
+    os.remove(image_path)
+
+    stem = Path(filename).stem
+    label_path = os.path.join(active_project_path, "labels", f"{stem}.txt")
+    if os.path.isfile(label_path):
+        os.remove(label_path)
+
+    completed = load_completed(active_project_path)
+    if filename in completed:
+        completed.remove(filename)
+        save_completed(active_project_path, completed)
+
+    return jsonify({"success": True})
+
+
 @app.route("/api/images/<path:filename>")
 def serve_image(filename):
     if not active_project_path:

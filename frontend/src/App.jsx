@@ -202,6 +202,34 @@ export default function App() {
     [boxes, handleBoxesChange]
   );
 
+  // 이미지 + 라벨 파일 삭제
+  const handleDeleteImage = async (filename) => {
+    if (!window.confirm(`"${filename}" 이미지와 라벨 파일을 삭제합니다.\n이 작업은 되돌릴 수 없습니다. 계속할까요?`)) {
+      return;
+    }
+    try {
+      const res = await fetch(`/api/images/${encodeURIComponent(filename)}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || '삭제 실패');
+        return;
+      }
+      setImages((prev) => prev.filter((img) => img.filename !== filename));
+      if (selectedImage === filename) {
+        setSelectedImage(null);
+        setBoxes([]);
+        setSavedBoxes([]);
+        setSelectedBoxIndex(-1);
+        setHistory([]);
+        setHistoryIndex(-1);
+      }
+    } catch (err) {
+      alert('삭제 실패: ' + err.message);
+    }
+  };
+
   // 완료 토글
   const handleToggleCompleted = async (filename, completed) => {
     try {
@@ -295,6 +323,7 @@ export default function App() {
             selectedImage={selectedImage}
             onSelectImage={handleSelectImage}
             onToggleCompleted={handleToggleCompleted}
+            onDeleteImage={handleDeleteImage}
           />
         </aside>
         <div
