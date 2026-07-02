@@ -755,10 +755,33 @@ body {
   background: #155080;
 }
 
+.scope-picker-filter {
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 6px;
+  padding: 4px 6px;
+  font-size: 11px;
+  color: #d0d8f0;
+  background: #0e1e3a;
+  border: 1px solid #1c3a6e;
+  border-radius: 3px;
+}
+
+.scope-picker-filter::placeholder {
+  color: #5a6b95;
+}
+
 .scope-picker-count {
   font-size: 10px;
   color: #7a90c0;
   margin-bottom: 4px;
+}
+
+.scope-picker-more {
+  font-size: 10px;
+  color: #7a90c0;
+  margin-top: 4px;
+  text-align: center;
 }
 
 .scope-picker-list {

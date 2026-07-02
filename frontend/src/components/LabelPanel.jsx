@@ -1,8 +1,22 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { getClassColor } from '../utils/yolo';
+
+// 리스트에 한 번에 렌더링할 최대 항목 수 (대량 이미지에서 브라우저 멈춤 방지)
+const MAX_RENDERED = 300;
 
 // 일괄 작업 대상 범위 선택 (전체 프로젝트 / 선택한 이미지)
 function ScopeSelector({ idPrefix, images, selectedImage, scope, onScopeChange, selected, onSelectedChange }) {
+  const [filter, setFilter] = useState('');
+
+  const filtered = useMemo(() => {
+    const q = filter.trim().toLowerCase();
+    if (!q) return images;
+    return images.filter((img) => img.filename.toLowerCase().includes(q));
+  }, [images, filter]);
+
+  const visible = filtered.slice(0, MAX_RENDERED);
+  const hiddenCount = filtered.length - visible.length;
+
   const toggle = (filename) => {
     const next = new Set(selected);
     if (next.has(filename)) {
@@ -38,9 +52,19 @@ function ScopeSelector({ idPrefix, images, selectedImage, scope, onScopeChange, 
 
       {scope === 'selected' && (
         <div className="scope-picker">
+          <input
+            type="text"
+            className="scope-picker-filter"
+            placeholder="파일명 검색..."
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+          />
           <div className="scope-picker-actions">
-            <button type="button" onClick={() => onSelectedChange(new Set(images.map((i) => i.filename)))}>
-              전체선택
+            <button
+              type="button"
+              onClick={() => onSelectedChange(new Set([...selected, ...filtered.map((i) => i.filename)]))}
+            >
+              {filter.trim() ? '검색결과 선택' : '전체선택'}
             </button>
             <button type="button" onClick={() => onSelectedChange(new Set())}>
               해제
@@ -51,9 +75,11 @@ function ScopeSelector({ idPrefix, images, selectedImage, scope, onScopeChange, 
               </button>
             )}
           </div>
-          <div className="scope-picker-count">{selected.size}개 선택됨</div>
+          <div className="scope-picker-count">
+            {selected.size}개 선택됨 · 검색 {filtered.length}개
+          </div>
           <ul className="scope-picker-list">
-            {images.map((img) => (
+            {visible.map((img) => (
               <li key={img.filename}>
                 <label className={selected.has(img.filename) ? 'checked' : ''}>
                   <input
@@ -66,6 +92,11 @@ function ScopeSelector({ idPrefix, images, selectedImage, scope, onScopeChange, 
               </li>
             ))}
           </ul>
+          {hiddenCount > 0 && (
+            <div className="scope-picker-more">
+              {hiddenCount.toLocaleString()}개 더 있음 — 검색으로 좁혀주세요
+            </div>
+          )}
         </div>
       )}
     </div>

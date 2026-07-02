@@ -233,6 +233,10 @@ export default function App() {
   // 완료 토글
   const handleToggleCompleted = async (filename, completed) => {
     try {
+      // 현재 편집 중인 이미지를 완료 처리하면 미저장 라벨을 먼저 저장
+      if (filename === selectedImage && hasChanges) {
+        await handleSave();
+      }
       await fetch(`/api/completed/${encodeURIComponent(filename)}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -253,17 +257,18 @@ export default function App() {
     if (!activeProject) return;
 
     const handleKeyDown = (e) => {
-      if (e.ctrlKey && e.key === 's') {
+      // e.code(물리 키)를 사용해 한글 IME/CapsLock 상태와 무관하게 동작하도록 함
+      if (e.ctrlKey && e.code === 'KeyS') {
         e.preventDefault();
         handleSave();
         return;
       }
-      if (e.ctrlKey && !e.shiftKey && e.key === 'z') {
+      if (e.ctrlKey && !e.shiftKey && e.code === 'KeyZ') {
         e.preventDefault();
         undo();
         return;
       }
-      if (e.ctrlKey && e.shiftKey && e.key === 'Z') {
+      if (e.ctrlKey && e.shiftKey && e.code === 'KeyZ') {
         e.preventDefault();
         redo();
         return;
@@ -272,11 +277,11 @@ export default function App() {
         handleDeleteBox(selectedBoxIndex);
         return;
       }
-      if (e.key === 'v' || e.key === 'V') {
+      if (e.code === 'KeyV') {
         if (!e.ctrlKey) setMode('select');
         return;
       }
-      if (e.key === 'd' || e.key === 'D') {
+      if (e.code === 'KeyD') {
         if (!e.ctrlKey) setMode('draw');
         return;
       }
