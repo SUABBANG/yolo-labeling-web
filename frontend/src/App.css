@@ -548,6 +548,51 @@ body {
   font-size: 18px;
 }
 
+/* 확대/축소 컨트롤 */
+.zoom-controls {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  background: rgba(22, 33, 62, 0.9);
+  border: 1px solid #2a2a4a;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  user-select: none;
+  z-index: 10;
+}
+
+.zoom-controls button {
+  width: 30px;
+  height: 30px;
+  font-size: 18px;
+  line-height: 1;
+  color: #e0e0e0;
+  background: #0f3460;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.zoom-controls button:hover {
+  background: #16528f;
+}
+
+.zoom-controls .zoom-level {
+  min-width: 52px;
+  text-align: center;
+  font-size: 13px;
+  color: #cfcfe0;
+  cursor: pointer;
+}
+
+.zoom-controls .zoom-level:hover {
+  color: #fff;
+}
+
 /* Label Panel */
 .panel {
   background: #16213e;

@@ -374,22 +374,46 @@ export default function LabelCanvas({
     setDragging(null);
   };
 
-  // 줌 처리
-  const handleWheel = (e) => {
-    e.preventDefault();
-    const delta = e.deltaY > 0 ? 0.9 : 1.1;
-    const newZoom = Math.min(Math.max(zoom * delta, 0.1), 10);
+  // 특정 화면 좌표(mx, my)를 기준으로 배율 변경 (해당 지점 고정)
+  const zoomAt = useCallback(
+    (factor, mx, my) => {
+      const newZoom = Math.min(Math.max(zoom * factor, 0.1), 10);
+      const newOffsetX = mx - ((mx - offset.x) / zoom) * newZoom;
+      const newOffsetY = my - ((my - offset.y) / zoom) * newZoom;
+      onZoomChange(newZoom);
+      onOffsetChange({ x: newOffsetX, y: newOffsetY });
+    },
+    [zoom, offset, onZoomChange, onOffsetChange]
+  );
 
-    const rect = canvasRef.current.getBoundingClientRect();
-    const mx = e.clientX - rect.left;
-    const my = e.clientY - rect.top;
+  // 줌 처리 (마우스 휠)
+  const handleWheel = useCallback(
+    (e) => {
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? 0.9 : 1.1;
+      const rect = canvasRef.current.getBoundingClientRect();
+      zoomAt(delta, e.clientX - rect.left, e.clientY - rect.top);
+    },
+    [zoomAt]
+  );
 
-    const newOffsetX = mx - ((mx - offset.x) / zoom) * newZoom;
-    const newOffsetY = my - ((my - offset.y) / zoom) * newZoom;
+  // 버튼 확대/축소 (컨테이너 중앙 기준)
+  const zoomByButton = useCallback(
+    (factor) => {
+      const container = containerRef.current;
+      if (!container) return;
+      zoomAt(factor, container.clientWidth / 2, container.clientHeight / 2);
+    },
+    [zoomAt]
+  );
 
-    onZoomChange(newZoom);
-    onOffsetChange({ x: newOffsetX, y: newOffsetY });
-  };
+  // 휠 이벤트를 non-passive 네이티브 리스너로 등록 (React onWheel은 passive라 preventDefault 불가)
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    canvas.addEventListener('wheel', handleWheel, { passive: false });
+    return () => canvas.removeEventListener('wheel', handleWheel);
+  }, [handleWheel, imageUrl]);
 
   // 이미지를 컨테이너 중앙에 맞추는 함수
   const fitToCenter = useCallback(() => {
@@ -425,15 +449,24 @@ export default function LabelCanvas({
   return (
     <div className="canvas-container" ref={containerRef}>
       {imageUrl ? (
-        <canvas
-          ref={canvasRef}
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseUp}
-          onWheel={handleWheel}
-          style={{ cursor: mode === 'draw' ? 'crosshair' : 'default' }}
-        />
+        <>
+          <canvas
+            ref={canvasRef}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+            style={{ cursor: mode === 'draw' ? 'crosshair' : 'default' }}
+          />
+          <div className="zoom-controls">
+            <button type="button" onClick={() => zoomByButton(1.2)} title="확대">＋</button>
+            <span className="zoom-level" onClick={fitToCenter} title="화면 맞춤">
+              {Math.round(zoom * 100)}%
+            </span>
+            <button type="button" onClick={() => zoomByButton(1 / 1.2)} title="축소">－</button>
+            <button type="button" onClick={fitToCenter} title="화면 맞춤">⤢</button>
+          </div>
+        </>
       ) : (
         <div className="canvas-placeholder">
           이미지를 선택하세요
